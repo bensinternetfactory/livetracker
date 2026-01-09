@@ -8,7 +8,12 @@
  * @module
  */
 
-import type * as myFunctions from "../myFunctions.js";
+import type * as approvals from "../approvals.js";
+import type * as lib_hash from "../lib/hash.js";
+import type * as seed from "../seed.js";
+import type * as sessions from "../sessions.js";
+import type * as termSelections from "../termSelections.js";
+import type * as vehicles from "../vehicles.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +22,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  myFunctions: typeof myFunctions;
+  approvals: typeof approvals;
+  "lib/hash": typeof lib_hash;
+  seed: typeof seed;
+  sessions: typeof sessions;
+  termSelections: typeof termSelections;
+  vehicles: typeof vehicles;
 }>;
 
 /**

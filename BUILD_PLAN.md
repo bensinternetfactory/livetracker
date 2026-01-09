@@ -32,9 +32,9 @@
 - [x] Basic UI components (sliders, inputs, cards)
 
 ## Phase 2: Data Layer
-- [ ] Convex schema (Approval, Vehicle, Session, TermSelection, AuditEvent)
-- [ ] Seed data script
-- [ ] Basic queries/mutations
+- [x] Convex schema (Approval, Vehicle, Session, TermSelection, AuditEvent)
+- [x] Seed data script
+- [x] Basic queries/mutations
 
 ## Phase 3: Customer Verification Flow
 - [ ] `/a/[token]` verification page (last 4 entry)
