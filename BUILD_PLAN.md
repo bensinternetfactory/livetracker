@@ -37,27 +37,27 @@
 - [x] Basic queries/mutations
 
 ## Phase 3: Customer Verification Flow
-- [ ] `/a/[token]` verification page (last 4 entry)
-- [ ] Session token validation
-- [ ] Rate limiting / lockout logic
+- [x] `/a/[token]` verification page (last 4 entry)
+- [x] Session token validation
+- [x] Rate limiting / lockout logic
 
 ## Phase 4: Customer Terms Page
-- [ ] Vehicle card + payment panel
-- [ ] Term slider (24-84), down payment input, balloon toggle
-- [ ] Real-time calculation display
-- [ ] Confirm terms flow → placeholder closing page
+- [x] Vehicle card + payment panel
+- [x] Term slider (24-84), down payment input, balloon toggle
+- [x] Real-time calculation display
+- [x] Confirm terms flow → placeholder closing page
 
 ## Phase 5: Rep Dashboard
-- [ ] CRUD for Vehicles
-- [ ] CRUD for Approvals
-- [ ] CRUD for Sessions (generate magic links)
+- [x] CRUD for Vehicles
+- [x] CRUD for Approvals
+- [x] CRUD for Sessions (generate magic links)
 
 ## Phase 6: Liveblocks Integration
-- [ ] Room setup + auth endpoint
-- [ ] Rep cursor tracking (Figma-style)
-- [ ] Spotlight highlighting
-- [ ] Control locking
-- [ ] Side-by-side rep view
+- [x] Room setup + auth endpoint
+- [x] Rep cursor tracking (Figma-style)
+- [x] Spotlight highlighting
+- [x] Control locking
+- [x] Side-by-side rep view
 
 ## Phase 7: Polish
 - [ ] Skeleton loaders, animations

@@ -1,5 +1,5 @@
 import { mutation } from "./_generated/server";
-import { generateSalt, hashWithSalt } from "./lib/hash";
+import { generateSalt, hashWithSalt, generateToken, hashToken } from "./lib/hash";
 
 /**
  * Seed the database with sample data for development
@@ -186,6 +186,48 @@ export const clearDatabase = mutation({
         approvals: approvals.length,
         vehicles: vehicles.length,
       },
+    };
+  },
+});
+
+/**
+ * Create a test session with a magic link (for development only)
+ * Returns the magic link URL and the last 4 digits for verification
+ */
+export const createTestSession = mutation({
+  args: {},
+  handler: async (ctx) => {
+    // Get the first active approval
+    const approval = await ctx.db
+      .query("approvals")
+      .filter((q) => q.eq(q.field("status"), "active"))
+      .first();
+
+    if (!approval) {
+      return { error: "No active approvals found. Run seedDatabase first." };
+    }
+
+    // Generate token and hash it
+    const token = generateToken(32);
+    const tokenHash = await hashToken(token);
+
+    const sessionId = await ctx.db.insert("sessions", {
+      tokenHash,
+      approvalId: approval._id,
+      maxAttempts: 5,
+      attemptCount: 0,
+      status: "pending",
+      expiresAt: Date.now() + 60 * 60 * 1000, // 1 hour
+      createdAt: Date.now(),
+      createdByRepId: "rep_test",
+    });
+
+    return {
+      message: "Test session created",
+      magicLink: `/a/${token}`,
+      customerName: approval.customerName,
+      hint: "Use one of these last 4 digits: 1234, 5678, or 9012",
+      sessionId,
     };
   },
 });

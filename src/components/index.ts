@@ -1,8 +1,12 @@
 export { Button } from './Button';
 export { Card } from './Card';
 export { CurrencyInput } from './CurrencyInput';
+export { PaymentBreakdown } from './PaymentBreakdown';
 export { PaymentDisplay } from './PaymentDisplay';
 export { PinInput } from './PinInput';
 export { RangeSlider } from './RangeSlider';
+export { TermsPanel } from './TermsPanel';
+export type { TermsValues } from './TermsPanel';
 export { Toggle } from './Toggle';
 export { VehicleCard } from './VehicleCard';
+export { VerificationPage, VerificationError, VerificationLoading } from './VerificationPage';

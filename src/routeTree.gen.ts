@@ -10,33 +10,102 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RepIndexRouteImport } from './routes/rep/index'
+import { Route as TermsSessionIdRouteImport } from './routes/terms/$sessionId'
+import { Route as ClosingSessionIdRouteImport } from './routes/closing/$sessionId'
+import { Route as ATokenRouteImport } from './routes/a/$token'
+import { Route as RepSessionSessionIdRouteImport } from './routes/rep/session/$sessionId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RepIndexRoute = RepIndexRouteImport.update({
+  id: '/rep/',
+  path: '/rep/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsSessionIdRoute = TermsSessionIdRouteImport.update({
+  id: '/terms/$sessionId',
+  path: '/terms/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClosingSessionIdRoute = ClosingSessionIdRouteImport.update({
+  id: '/closing/$sessionId',
+  path: '/closing/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ATokenRoute = ATokenRouteImport.update({
+  id: '/a/$token',
+  path: '/a/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RepSessionSessionIdRoute = RepSessionSessionIdRouteImport.update({
+  id: '/rep/session/$sessionId',
+  path: '/rep/session/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/a/$token': typeof ATokenRoute
+  '/closing/$sessionId': typeof ClosingSessionIdRoute
+  '/terms/$sessionId': typeof TermsSessionIdRoute
+  '/rep': typeof RepIndexRoute
+  '/rep/session/$sessionId': typeof RepSessionSessionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/a/$token': typeof ATokenRoute
+  '/closing/$sessionId': typeof ClosingSessionIdRoute
+  '/terms/$sessionId': typeof TermsSessionIdRoute
+  '/rep': typeof RepIndexRoute
+  '/rep/session/$sessionId': typeof RepSessionSessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/a/$token': typeof ATokenRoute
+  '/closing/$sessionId': typeof ClosingSessionIdRoute
+  '/terms/$sessionId': typeof TermsSessionIdRoute
+  '/rep/': typeof RepIndexRoute
+  '/rep/session/$sessionId': typeof RepSessionSessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/a/$token'
+    | '/closing/$sessionId'
+    | '/terms/$sessionId'
+    | '/rep'
+    | '/rep/session/$sessionId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/a/$token'
+    | '/closing/$sessionId'
+    | '/terms/$sessionId'
+    | '/rep'
+    | '/rep/session/$sessionId'
+  id:
+    | '__root__'
+    | '/'
+    | '/a/$token'
+    | '/closing/$sessionId'
+    | '/terms/$sessionId'
+    | '/rep/'
+    | '/rep/session/$sessionId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ATokenRoute: typeof ATokenRoute
+  ClosingSessionIdRoute: typeof ClosingSessionIdRoute
+  TermsSessionIdRoute: typeof TermsSessionIdRoute
+  RepIndexRoute: typeof RepIndexRoute
+  RepSessionSessionIdRoute: typeof RepSessionSessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +117,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rep/': {
+      id: '/rep/'
+      path: '/rep'
+      fullPath: '/rep'
+      preLoaderRoute: typeof RepIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms/$sessionId': {
+      id: '/terms/$sessionId'
+      path: '/terms/$sessionId'
+      fullPath: '/terms/$sessionId'
+      preLoaderRoute: typeof TermsSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/closing/$sessionId': {
+      id: '/closing/$sessionId'
+      path: '/closing/$sessionId'
+      fullPath: '/closing/$sessionId'
+      preLoaderRoute: typeof ClosingSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/a/$token': {
+      id: '/a/$token'
+      path: '/a/$token'
+      fullPath: '/a/$token'
+      preLoaderRoute: typeof ATokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rep/session/$sessionId': {
+      id: '/rep/session/$sessionId'
+      path: '/rep/session/$sessionId'
+      fullPath: '/rep/session/$sessionId'
+      preLoaderRoute: typeof RepSessionSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ATokenRoute: ATokenRoute,
+  ClosingSessionIdRoute: ClosingSessionIdRoute,
+  TermsSessionIdRoute: TermsSessionIdRoute,
+  RepIndexRoute: RepIndexRoute,
+  RepSessionSessionIdRoute: RepSessionSessionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

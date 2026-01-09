@@ -384,3 +384,39 @@ export const expireOldSessions = internalMutation({
     return { expired: toExpire.length };
   },
 });
+
+/**
+ * Log collaborative events (Liveblocks actions)
+ */
+export const logCollaborativeEvent = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    eventType: v.union(
+      v.literal("rep_joined"),
+      v.literal("rep_left"),
+      v.literal("spotlight_changed"),
+      v.literal("controls_locked"),
+      v.literal("controls_unlocked")
+    ),
+    payload: v.optional(v.any()),
+    repId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get(args.sessionId);
+    if (!session) {
+      throw new Error("Session not found");
+    }
+
+    await ctx.db.insert("auditEvents", {
+      sessionId: args.sessionId,
+      approvalId: session.approvalId,
+      actor: "rep",
+      actorId: args.repId,
+      eventType: args.eventType,
+      payload: args.payload,
+      createdAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
