@@ -17,16 +17,23 @@ export type ControlId =
 
 // Presence: Real-time ephemeral state (cursors, selections)
 type Presence = {
-  cursor: { x: number; y: number } | null;
+  // Container-relative cursor position (percentages for cross-screen-size accuracy)
+  cursor: { containerX: number; containerY: number; scrollY: number } | null;
   spotlightedControl: ControlId;
   role: 'rep' | 'customer';
   name: string;
+  // Scroll position for scroll sync
+  scrollY: number;
+  // Whether this user is actively controlling inputs
+  isControlling: boolean;
 };
 
 // Broadcast event types for commands
 type RoomEvent =
   | { type: 'LOCK_CONTROLS' }
-  | { type: 'UNLOCK_CONTROLS' };
+  | { type: 'UNLOCK_CONTROLS' }
+  | { type: 'INPUT_CHANGE'; controlId: ControlId; value: number | boolean }
+  | { type: 'SCROLL_SYNC'; scrollY: number };
 
 // User metadata from auth endpoint
 type UserMeta = {
