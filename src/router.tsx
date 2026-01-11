@@ -2,15 +2,17 @@ import { createRouter } from '@tanstack/react-router'
 import { QueryClient } from '@tanstack/react-query'
 import { routerWithQueryClient } from '@tanstack/react-router-with-query'
 import { ConvexQueryClient } from '@convex-dev/react-query'
-import { ConvexProvider } from 'convex/react'
 import { routeTree } from './routeTree.gen'
 
+function getConvexUrl() {
+  if (typeof window !== 'undefined') {
+    return (import.meta as any).env.VITE_CONVEX_URL
+  }
+  return process.env.CONVEX_URL || process.env.VITE_CONVEX_URL
+}
+
 export function getRouter() {
-  // Handle both client (import.meta.env) and server (process.env) environments
-  // Note: VITE_ prefix is for client-side only. Server needs CONVEX_URL without prefix.
-  const CONVEX_URL = typeof window !== 'undefined'
-    ? (import.meta as any).env.VITE_CONVEX_URL
-    : process.env.CONVEX_URL || process.env.VITE_CONVEX_URL
+  const CONVEX_URL = getConvexUrl()
 
   if (!CONVEX_URL) {
     throw new Error('Missing CONVEX_URL environment variable. Set VITE_CONVEX_URL for client and CONVEX_URL for server.')
@@ -37,11 +39,6 @@ export function getRouter() {
       defaultPreloadStaleTime: 0, // Let React Query handle all caching
       defaultErrorComponent: (err) => <p>{err.error.stack}</p>,
       defaultNotFoundComponent: () => <p>not found</p>,
-      Wrap: ({ children }) => (
-        <ConvexProvider client={convexQueryClient.convexClient}>
-          {children}
-        </ConvexProvider>
-      ),
     }),
     queryClient,
   )

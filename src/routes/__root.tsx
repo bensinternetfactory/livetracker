@@ -7,6 +7,7 @@ import {
 import * as React from 'react'
 import type { QueryClient } from '@tanstack/react-query'
 import appCss from '~/styles/app.css?url'
+import { ConvexClientProvider } from '~/components/ConvexClientProvider'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -54,7 +55,9 @@ export const Route = createRootRouteWithContext<{
 function RootComponent() {
   return (
     <RootDocument>
-      <Outlet />
+      <ConvexClientProvider>
+        <Outlet />
+      </ConvexClientProvider>
     </RootDocument>
   )
 }
