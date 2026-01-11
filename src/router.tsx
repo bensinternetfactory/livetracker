@@ -13,9 +13,9 @@ export function getRouter() {
     : process.env.CONVEX_URL || process.env.VITE_CONVEX_URL
 
   if (!CONVEX_URL) {
-    console.error('missing envar CONVEX_URL')
+    throw new Error('Missing CONVEX_URL environment variable. Set VITE_CONVEX_URL for client and CONVEX_URL for server.')
   }
-  const convexQueryClient = new ConvexQueryClient(CONVEX_URL!)
+  const convexQueryClient = new ConvexQueryClient(CONVEX_URL)
 
   const queryClient: QueryClient = new QueryClient({
     defaultOptions: {
