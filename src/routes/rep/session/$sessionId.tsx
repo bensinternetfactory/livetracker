@@ -17,6 +17,8 @@ function RepSessionPage() {
         spotlightedControl: null,
         role: 'rep',
         name: 'Sales Rep',
+        scrollY: 0,
+        isControlling: false,
       }}
     >
       <RepSessionView sessionId={sessionId} />

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { convexQuery } from '@convex-dev/react-query';
 import { api } from '../../convex/_generated/api';
@@ -18,19 +18,35 @@ import { useRepControls } from '~/hooks/useRepControls';
 import { useOthers } from '~/liveblocks.config';
 import type { ControlId } from '~/liveblocks.config';
 
+// Helper to detect which control changed
+function detectChangedControl(
+  prev: TermsValues,
+  next: TermsValues
+): { id: ControlId; value: number | boolean } | null {
+  if (prev.termMonths !== next.termMonths) return { id: 'termSlider', value: next.termMonths };
+  if (prev.downPayment !== next.downPayment) return { id: 'downPayment', value: next.downPayment };
+  if (prev.balloonEnabled !== next.balloonEnabled) return { id: 'balloonToggle', value: next.balloonEnabled };
+  if (prev.balloonPercent !== next.balloonPercent) return { id: 'balloonSlider', value: next.balloonPercent };
+  return null;
+}
+
 interface RepSessionViewProps {
   sessionId: string;
 }
 
 export function RepSessionView({ sessionId }: RepSessionViewProps) {
-  // Track rep's cursor for customer to see
-  useCursorTracking();
+  // Container ref for cursor tracking and scroll sync
+  const previewContainerRef = useRef<HTMLDivElement>(null);
 
-  const { lockControls, unlockControls, spotlightControl, clearSpotlight } =
+  // Track rep's cursor for customer to see
+  useCursorTracking({ containerRef: previewContainerRef });
+
+  const { lockControls, unlockControls, spotlightControl, clearSpotlight, broadcastInputChange, syncScroll } =
     useRepControls();
 
   const [isLocked, setIsLocked] = useState(false);
   const [activeSpotlight, setActiveSpotlight] = useState<ControlId>(null);
+  const [copied, setCopied] = useState(false);
 
   // Check if customer is connected
   const others = useOthers();
@@ -41,8 +57,8 @@ export function RepSessionView({ sessionId }: RepSessionViewProps) {
     ...convexQuery(api.sessions.get, { id: sessionId as Id<'sessions'> }),
   });
 
-  // Mirror the customer's terms state (read-only view)
-  const terms: TermsValues = useMemo(
+  // Default terms values from approval
+  const defaultTerms: TermsValues = useMemo(
     () => ({
       termMonths: session?.approval?.maxTermMonths ?? 72,
       downPayment: 0,
@@ -51,6 +67,65 @@ export function RepSessionView({ sessionId }: RepSessionViewProps) {
     }),
     [session?.approval?.maxTermMonths]
   );
+
+  // Mutable terms state for rep control
+  const [terms, setTerms] = useState<TermsValues>(defaultTerms);
+
+  // Reset terms when session loads
+  useEffect(() => {
+    setTerms(defaultTerms);
+  }, [defaultTerms]);
+
+  // Scroll tracking: sync rep's scroll position to customer
+  useEffect(() => {
+    const container = previewContainerRef.current;
+    if (!container) return;
+
+    let rafId: number;
+    const handleScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        syncScroll(container.scrollTop);
+      });
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, [syncScroll]);
+
+  // Get magic link URL from localStorage
+  const magicLinkUrl = useMemo(() => {
+    try {
+      const tokens = JSON.parse(localStorage.getItem('sessionTokens') || '{}');
+      const token = tokens[sessionId];
+      if (token) {
+        return `${window.location.origin}/a/${token}`;
+      }
+    } catch {
+      // Ignore JSON parse errors
+    }
+    return null;
+  }, [sessionId]);
+
+  // Handle terms change from rep
+  const handleTermsChange = (newTerms: TermsValues) => {
+    const changedControl = detectChangedControl(terms, newTerms);
+    if (changedControl) {
+      broadcastInputChange(changedControl.id, changedControl.value);
+    }
+    setTerms(newTerms);
+  };
+
+  const handleCopyMagicLink = () => {
+    if (magicLinkUrl) {
+      navigator.clipboard.writeText(magicLinkUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   // Calculate payment breakdown for preview
   const breakdown = useMemo(() => {
@@ -117,7 +192,7 @@ export function RepSessionView({ sessionId }: RepSessionViewProps) {
     <main className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="flex h-screen">
         {/* Left: Customer View Preview */}
-        <div className="flex-1 border-r border-gray-300 dark:border-gray-700 overflow-auto">
+        <div ref={previewContainerRef} className="flex-1 border-r border-gray-300 dark:border-gray-700 overflow-auto">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -172,11 +247,11 @@ export function RepSessionView({ sessionId }: RepSessionViewProps) {
               {approval && vehicle && (
                 <Card padding="lg" shadow="sm">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Terms (Preview)
+                    Adjust Terms
                   </h3>
                   <TermsPanel
                     values={terms}
-                    onChange={() => {}} // Read-only
+                    onChange={handleTermsChange}
                     constraints={{
                       minTermMonths: approval.minTermMonths,
                       maxTermMonths: approval.maxTermMonths,
@@ -184,7 +259,7 @@ export function RepSessionView({ sessionId }: RepSessionViewProps) {
                       balloonAllowed: approval.balloonAllowed,
                       maxBalloonPercent: approval.maxBalloonPercent,
                     }}
-                    disabled={true}
+                    disabled={false}
                     highlightedControl={activeSpotlight}
                   />
                 </Card>
@@ -210,6 +285,30 @@ export function RepSessionView({ sessionId }: RepSessionViewProps) {
               {session.status}
             </p>
           </div>
+
+          {/* Magic Link URL */}
+          {magicLinkUrl && (
+            <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                Customer Magic Link
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={magicLinkUrl}
+                  readOnly
+                  className="flex-1 px-2 py-1 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleCopyMagicLink}
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Lock/Unlock Toggle */}
           <div className="mb-6">

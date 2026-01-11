@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useMutation } from '@tanstack/react-query';
 import { useConvexMutation } from '@convex-dev/react-query';
@@ -15,6 +15,7 @@ import type { TermsValues } from '~/components';
 import { calculatePaymentBreakdown } from '~/lib/finance';
 import { Cursors } from './Cursors';
 import { useCollaborativeState } from '~/hooks/useCollaborativeState';
+import type { ControlId } from '~/liveblocks.config';
 
 interface Session {
   _id: string;
@@ -45,7 +46,33 @@ interface CollaborativeTermsPageProps {
 
 export function CollaborativeTermsPage({ session }: CollaborativeTermsPageProps) {
   const navigate = useNavigate();
-  const { isLocked, repSpotlight, repPresent } = useCollaborativeState();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // State for terms
+  const [terms, setTerms] = useState<TermsValues>({
+    termMonths: session.approval?.maxTermMonths ?? 72,
+    downPayment: 0,
+    balloonEnabled: false,
+    balloonPercent: 0,
+  });
+
+  // Handle input changes from rep
+  const handleRepInputChange = useCallback((controlId: ControlId, value: number | boolean) => {
+    setTerms(prev => {
+      switch (controlId) {
+        case 'termSlider': return { ...prev, termMonths: value as number };
+        case 'downPayment': return { ...prev, downPayment: value as number };
+        case 'balloonToggle': return { ...prev, balloonEnabled: value as boolean };
+        case 'balloonSlider': return { ...prev, balloonPercent: value as number };
+        default: return prev;
+      }
+    });
+  }, []);
+
+  const { isLocked, repSpotlight, repPresent, repIsControlling } = useCollaborativeState({
+    containerRef,
+    onInputChange: handleRepInputChange,
+  });
 
   // Confirm terms mutation
   const { mutateAsync: confirmTerms, isPending: isConfirming } = useMutation({
@@ -57,31 +84,7 @@ export function CollaborativeTermsPage({ session }: CollaborativeTermsPageProps)
     mutationFn: useConvexMutation(api.sessions.complete),
   });
 
-  // Default values from approval
-  const defaultTerms: TermsValues = useMemo(
-    () => ({
-      termMonths: session.approval?.maxTermMonths ?? 72,
-      downPayment: 0,
-      balloonEnabled: false,
-      balloonPercent: 0,
-    }),
-    [session.approval?.maxTermMonths]
-  );
-
-  const [terms, setTerms] = useState<TermsValues>(defaultTerms);
   const [error, setError] = useState<string | undefined>();
-
-  // Reset terms when session loads
-  useMemo(() => {
-    if (session.approval) {
-      setTerms({
-        termMonths: session.approval.maxTermMonths,
-        downPayment: 0,
-        balloonEnabled: false,
-        balloonPercent: 0,
-      });
-    }
-  }, [session.approval?.maxTermMonths]);
 
   // Calculate payment breakdown
   const breakdown = useMemo(() => {
@@ -144,11 +147,18 @@ export function CollaborativeTermsPage({ session }: CollaborativeTermsPageProps)
   return (
     <>
       {/* Rep cursor overlay */}
-      <Cursors />
+      <Cursors containerRef={containerRef} />
 
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24">
+      {/* Rep is controlling banner */}
+      {repIsControlling && (
+        <div className="fixed top-0 inset-x-0 bg-green-500 text-white text-center py-2 text-sm font-medium z-50">
+          Your rep is making adjustments...
+        </div>
+      )}
+
+      <main ref={containerRef} className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 overflow-auto">
         {/* Rep presence indicator */}
-        {repPresent && (
+        {repPresent && !repIsControlling && (
           <div className="bg-blue-500 text-white text-center py-2 text-sm font-medium">
             A sales rep is viewing your session
           </div>

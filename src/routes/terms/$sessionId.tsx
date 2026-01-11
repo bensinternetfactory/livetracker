@@ -83,6 +83,8 @@ function TermsPage() {
         spotlightedControl: null,
         role: 'customer',
         name: customerName,
+        scrollY: 0,
+        isControlling: false,
       }}
     >
       {isPending && (

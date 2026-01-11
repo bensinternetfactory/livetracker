@@ -108,6 +108,11 @@ function SessionsTab() {
     if (result?.token) {
       const link = `${window.location.origin}/a/${result.token}`;
       setNewSessionLink(link);
+
+      // Store token for later retrieval in RepSessionView
+      const existingTokens = JSON.parse(localStorage.getItem('sessionTokens') || '{}');
+      existingTokens[result.sessionId] = result.token;
+      localStorage.setItem('sessionTokens', JSON.stringify(existingTokens));
     }
   };
 
