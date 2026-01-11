@@ -7,12 +7,13 @@ import { routeTree } from './routeTree.gen'
 
 export function getRouter() {
   // Handle both client (import.meta.env) and server (process.env) environments
+  // Note: VITE_ prefix is for client-side only. Server needs CONVEX_URL without prefix.
   const CONVEX_URL = typeof window !== 'undefined'
     ? (import.meta as any).env.VITE_CONVEX_URL
-    : process.env.VITE_CONVEX_URL
+    : process.env.CONVEX_URL || process.env.VITE_CONVEX_URL
 
   if (!CONVEX_URL) {
-    console.error('missing envar VITE_CONVEX_URL')
+    console.error('missing envar CONVEX_URL')
   }
   const convexQueryClient = new ConvexQueryClient(CONVEX_URL!)
 
